@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronBasic", "IronBasic\IronBasic.csproj", "{1B66019E-0071-4467-B28F-3049358F821F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronBasic.Tests", "IronBasic.Tests\IronBasic.Tests.csproj", "{71CD050F-5BCC-4A5A-8B5A-A696A70F8E65}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1B66019E-0071-4467-B28F-3049358F821F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B66019E-0071-4467-B28F-3049358F821F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B66019E-0071-4467-B28F-3049358F821F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B66019E-0071-4467-B28F-3049358F821F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71CD050F-5BCC-4A5A-8B5A-A696A70F8E65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71CD050F-5BCC-4A5A-8B5A-A696A70F8E65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71CD050F-5BCC-4A5A-8B5A-A696A70F8E65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71CD050F-5BCC-4A5A-8B5A-A696A70F8E65}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
