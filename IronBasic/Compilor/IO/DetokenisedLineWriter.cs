@@ -29,9 +29,12 @@ namespace IronBasic.Compilor.IO
             return builder.ToString();
         }
 
-        public void Replace(string with)
+        public void Replace(string with, int length)
         {
-            BaseStream.Seek(0, SeekOrigin.Begin);
+            if (length <= 0)
+                return;
+
+            BaseStream.Seek(-1 * length, SeekOrigin.Current);
             Write(with);
         }
     }

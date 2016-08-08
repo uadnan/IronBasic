@@ -166,55 +166,56 @@ namespace IronBasic.Compilor.IO
             var builder = new StringBuilder();
             while (true)
             {
-                var current = char.ToUpper(ReadChar());
+                var current = Read();
                 if (current == -1)
                     break;
 
-                if ("\x1c\x1d\x1f".Contains(current))
+                var currentChar = char.ToUpper((char)current);
+                if ("\x1c\x1d\x1f".Contains(currentChar))
                 {
                     // ASCII separator chars invariably lead to zero result
                     kill = true;
                 }
-                else if (current == '.' && !hasDecimal && !hasExpotent)
+                else if (currentChar == '.' && !hasDecimal && !hasExpotent)
                 {
                     hasDecimal = true;
-                    builder.Append(current);
+                    builder.Append(currentChar);
                 }
-                else if ((current == 'E' || current == 'D') && !hasExpotent)
+                else if ((currentChar == 'E' || currentChar == 'D') && !hasExpotent)
                 {
                     // there's a special exception for number followed by EL or EQ
                     // presumably meant to protect ELSE and maybe EQV ?        
-                    if (current == 'E' && "LQ".Contains(char.ToUpper((char)Peek())))
+                    if (currentChar == 'E' && "LQ".Contains(char.ToUpper((char)Peek())))
                     {
                         BaseStream.Seek(-1, SeekOrigin.Current);
                         break;
                     }
 
                     hasExpotent = true;
-                    builder.Append(current);
+                    builder.Append(currentChar);
                 }
-                else if ((current == '-' || current == '+') &&
-                         (builder.Length > 0 || "ED".Contains(builder[builder.Length - 1])))
+                else if ((currentChar == '-' || currentChar == '+') &&
+                         (builder.Length > 0 && "ED".Contains(builder[builder.Length - 1])))
                 {
                     // must be first token or in exponent
-                    builder.Append(current);
+                    builder.Append(currentChar);
                 }
-                else if (Constants.AsciiDigits.Contains(current))
+                else if (Constants.AsciiDigits.Contains(currentChar))
                 {
-                    builder.Append(current);
+                    builder.Append(currentChar);
                 }
-                else if (Constants.AsciiWhitepsace.Contains(current))
+                else if (Constants.AsciiWhitepsace.Contains(currentChar))
                 {
                     // we'll remove this later but need to keep it for now
                     // so we can reposition the stream on removing trailing whitespace
-                    builder.Append(current);
+                    builder.Append(currentChar);
                 }
-                else if ((current == '!' || current == '#') && !hasExpotent)
+                else if ((currentChar == '!' || currentChar == '#') && !hasExpotent)
                 {
-                    builder.Append(current);
+                    builder.Append(currentChar);
                     break;
                 }
-                else if (current == '%') // swallow a %, but break parsing
+                else if (currentChar == '%') // swallow a %, but break parsing
                     break;
                 else
                 {
@@ -228,7 +229,7 @@ namespace IronBasic.Compilor.IO
             // don't claim trailing whitespace
             while (word.Length > 0 && Constants.AsciiWhitepsace.Contains(word[word.Length - 1]))
             {
-                word = word.Substring(word.Length - 2, 1);
+                word = word.Substring(0, word.Length - 1);
                 BaseStream.Seek(-1, SeekOrigin.Current);
             }
 
@@ -252,12 +253,12 @@ namespace IronBasic.Compilor.IO
             {
                 if (intValue <= 0xff && intValue >= 0) // one-byte constant
                 {
-                    builder.Append(Token.ByteConstant);
+                    builder.Append((char)Token.ByteConstant);
                     builder.Append((char)intValue);
                 }
                 else // two-byte constant
                 {
-                    builder.Append(Token.IntegerConstant);
+                    builder.Append((char)Token.IntegerConstant);
 
                     var number = intValue.ToBasicSignedInteger();
                     builder.Append(number);
@@ -266,7 +267,7 @@ namespace IronBasic.Compilor.IO
             else
             {
                 var mbf = word.ToMbf().ToBytes();
-                builder.Append(mbf.Length == 4 ? Token.FloatConstant : Token.DoubleConstant);
+                builder.Append((char)(mbf.Length == 4 ? Token.FloatConstant : Token.DoubleConstant));
                 builder.Append(new string(mbf.Select(f => (char)f).ToArray()));
             }
 
@@ -353,7 +354,7 @@ namespace IronBasic.Compilor.IO
                 {
                     word = builder.ToString();
                     BaseStream.Seek(-1, SeekOrigin.Current);
-                    return word.Substring(0, word.Length - 2);
+                    return word.Substring(0, word.Length - 1);
                 }
             }
         }

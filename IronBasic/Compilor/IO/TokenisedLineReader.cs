@@ -41,7 +41,8 @@ namespace IronBasic.Compilor.IO
 
         public int ReadUnsignedInteger()
         {
-            return 0x100 * Read() + Read();
+            var firstBit = Read();
+            return 0x100 * Read() + firstBit;
         }
 
         // Read two's complement little-endian int token to Python integer
@@ -72,7 +73,11 @@ namespace IronBasic.Compilor.IO
 
         private string ReadByte()
         {
-            return ReadChar().ToString();
+            var current = Read();
+            if (current == -1)
+                return string.Empty;
+
+            return current.ToString();
         }
 
         public string ReadNumber()
