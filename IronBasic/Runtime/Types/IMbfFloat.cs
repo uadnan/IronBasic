@@ -1,4 +1,6 @@
-﻿namespace IronBasic.Runtime.Types
+﻿using System.Numerics;
+
+namespace IronBasic.Runtime.Types
 {
     public interface IMbfFloat
     {
@@ -8,7 +10,7 @@
 
         bool IsZero { get; }
 
-        long Mantissa { get; }
+        BigInteger Mantissa { get; }
 
         byte MbfBias { get; }
 

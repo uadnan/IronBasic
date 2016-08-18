@@ -103,7 +103,7 @@ namespace IronBasic.Compilor.IO
                     return MbfSingle.FromBytes((byte)Read(), (byte)Read(), (byte)Read(), (byte)Read()).ToString(false, false);
                 case Token.DoubleConstant:
                     var bytes = new byte[8];
-                    BaseStream.Read(bytes, (int)BaseStream.Position, 8);
+                    BaseStream.Read(bytes, 0, 8);
                     return MbfDouble.FromBytes(bytes).ToString(false, false);
             }
 
