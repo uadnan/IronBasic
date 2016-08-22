@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 
 namespace IronBasic.Runtime.Types
@@ -14,7 +15,7 @@ namespace IronBasic.Runtime.Types
         public const byte TrueBias = 128;
 
         protected MbfFloat(byte mbfDigitsCount, byte mbfMantissaBits, byte mbfByteSize, ulong mbfCarryMask,
-            bool isNegitive = false, long mantisa = 0, byte exponent = 0)
+            bool isNegitive = false, BigInteger mantisa = default(BigInteger), byte exponent = 0)
         {
             MbfDigitCount = mbfDigitsCount;
             MbfMantissaBits = mbfMantissaBits;
@@ -39,7 +40,7 @@ namespace IronBasic.Runtime.Types
 
         public bool IsNegitive { get; private set; }
 
-        public long Mantissa { get; private set; }
+        public BigInteger Mantissa { get; private set; }
 
         public byte Exponent { get; private set; }
 
@@ -91,7 +92,7 @@ namespace IronBasic.Runtime.Types
                 Mantissa += 0x100;
 
             // overflow?
-            if (Mantissa >= Math.Pow(0x100, MbfByteSize))
+            if (Mantissa >= BigInteger.Pow(0x100, MbfByteSize))
             {
                 Exponent += 1;
                 Mantissa >>= 1;
@@ -114,9 +115,9 @@ namespace IronBasic.Runtime.Types
             var mantisa = Mantissa >> 8;
             long val;
             if (Exponent < MbfBias)
-                val = mantisa << (Exponent - MbfBias);
+                val = (long)(mantisa << (Exponent - MbfBias));
             else
-                val = mantisa >> (-Exponent + MbfBias);
+                val = (long)(mantisa >> (-Exponent + MbfBias));
 
             if (IsNegitive)
                 return -val;
@@ -128,9 +129,9 @@ namespace IronBasic.Runtime.Types
         {
             long mantisa;
             if (Exponent > MbfBias)
-                mantisa = Mantissa << (Exponent - MbfBias);
+                mantisa = (long)(Mantissa << (Exponent - MbfBias));
             else
-                mantisa = Mantissa >> (-Exponent + MbfBias);
+                mantisa = (long)(Mantissa >> (-Exponent + MbfBias));
 
             // carry bit set? then round up (affect mantissa only, note we can be bigger
             // than our byte_size allows)
@@ -179,7 +180,7 @@ namespace IronBasic.Runtime.Types
             }
 
             // are these correct?
-            while (Mantissa <= Math.Pow(2, MbfMantissaBits + 8 - 1)) // 0x7fffffffffffffff: # < 2**63
+            while (Mantissa <= (ulong)Math.Pow(2, MbfMantissaBits + 8 - 1)) // 0x7fffffffffffffff: # < 2**63
             {
                 // Undeflow
                 if (Exponent > 0)
@@ -188,7 +189,7 @@ namespace IronBasic.Runtime.Types
                 Mantissa <<= 1;
             }
 
-            while (Mantissa > Math.Pow(2, MbfMantissaBits + 8)) // 0xffffffffffffffff: # 2**64 or 0x100**8
+            while (Mantissa > (ulong)Math.Pow(2, MbfMantissaBits + 8)) // 0xffffffffffffffff: # 2**64 or 0x100**8
             {
                 // Overflow
                 if (Exponent == 0xff)
@@ -359,9 +360,9 @@ namespace IronBasic.Runtime.Types
         {
             var self = (MbfFloat) Clone();
             if (Exponent - MbfBias > 0)
-                self.Mantissa = (long) (self.Mantissa*Math.Pow(2, self.Exponent - MbfBias));
+                self.Mantissa = self.Mantissa * (ulong)Math.Pow(2, self.Exponent - MbfBias);
             else
-                self.Mantissa = (long) (self.Mantissa*Math.Pow(2, -self.Exponent + MbfBias));
+                self.Mantissa = self.Mantissa * (ulong)Math.Pow(2, -self.Exponent + MbfBias);
 
             self.Exponent = MbfBias;
             // carry bit set? then round up (moves exponent on overflow)
@@ -403,7 +404,7 @@ namespace IronBasic.Runtime.Types
                 // remove trailing zeros
                 while (builder.Length > 1 && builder[builder.Length - 1] == '0')
                 {
-                    builder.Remove(0, 1);
+                    builder.Remove(builder.Length - 1, 1);
                 }
             }
 

@@ -39,7 +39,7 @@ namespace IronBasic.Compilor
             var word = reader.ReadLineNumber();
             if (!string.IsNullOrEmpty(word))
             {
-                writer.Write(Token.LineNumber);
+                writer.Write((char)Token.LineNumber);
                 writer.Write(word);
             }
             else
@@ -89,7 +89,6 @@ namespace IronBasic.Compilor
 
         private void Tokenise(DetokenisedLineReader reader, TokenisedLineWriter writer)
         {
-
             var value = reader.SkipPeek(Constants.AsciiWhitepsace);
             if (value == -1)
                 return; // EOF
@@ -150,7 +149,7 @@ namespace IronBasic.Compilor
                     // operators don't affect line number mode - can do line number
                     // arithmetic and RENUM will do the strangest things
                     // this allows for 'LIST 100-200' etc.
-                    writer.Write(_keywordTokenMap[current.ToString()]);
+                    writer.Write(_keywordTokenMap[current.ToCharString()]);
                     allowNumber = true;
                 }
 
@@ -170,6 +169,8 @@ namespace IronBasic.Compilor
                 {
                     reader.Read();
                     writer.Write(Token.KeywordPrint);
+                    if (!Constants.AsciiWhitepsace.Contains(reader.Peek()))
+                        writer.Write(' ');
 
                     allowNumber = true;
                 }
@@ -183,7 +184,7 @@ namespace IronBasic.Compilor
                     // handle non-parsing modes
                     switch (word)
                     {
-                        case "REM":
+                        case Token.KeywordRem:
                         case "'":
                             writer.Write(reader.ReadRemarks());
                             break;
@@ -195,7 +196,7 @@ namespace IronBasic.Compilor
                             // numbers can follow tokenised keywords
                             // (which does not include the word 'AS')
 
-                            allowNumber = _keywordTokenMap.ContainsKey(word);
+                            allowNumber = _tokenKeywordMap.ContainsKey(word);
                             if (word == "SPC(" || word == "TAB(")
                                 accpetClosingBracket = true;
                             break;
@@ -324,8 +325,7 @@ namespace IronBasic.Compilor
                     // 0D: line pointer (unsigned int) - this token should not be here;
                     // interpret as line number and carry on
                     // 0E: line number (unsigned int)
-                    // return str(vartypes.integer_to_int_unsigned(vartypes.bytes_to_integer(s)))
-                    writer.Write(reader.ReadUnsignedInteger());
+                    writer.Write(reader.ReadUnsignedInteger().ToString());
                 }
                 else if (comment || stringLiteral || (current >= 0x20 && current <= 0x7E))
                 {
@@ -341,26 +341,29 @@ namespace IronBasic.Compilor
                 }
                 else
                 {
+                    writer.Flush();
                     reader.BaseStream.Seek(-1, SeekOrigin.Current);
                     if (writer.BaseStream.Length > 0)
                     {
                         // letter or number followed by token is separated by a space
                         writer.BaseStream.Seek(-1, SeekOrigin.Current);
                         var lastByte = writer.BaseStream.ReadByte();
-                        if (Constants.AsciiDigits.Contains(lastByte) || !Constants.AsciiOperators.Contains(current))
+                        if (Constants.AsciiDigits.Contains(lastByte) && !Constants.AsciiOperators.Contains(current))
                             writer.Write(' ');
                     }
 
                     var keyword = reader.ReadKeywords(out comment);
+                    writer.Write(keyword);
+                    writer.Flush();
 
                     // check for special cases
                     //   [:REM']   ->  [']
                     if (writer.ReadLast(4) == ":REM")
-                        writer.Replace("'");
+                        writer.Replace("'", 4);
 
                     //   [WHILE+]  ->  [WHILE]
-                    else if (writer.ReadLast(5) == "WHILE+")
-                        writer.Replace("WHILE");
+                    else if (writer.ReadLast(6) == "WHILE+")
+                        writer.Replace("WHILE", 6);
 
                     //   [:ELSE]  ->  [ELSE]
                     else if (writer.ReadLast(4) == "ELSE")
@@ -369,9 +372,9 @@ namespace IronBasic.Compilor
                         // e.g. if we have 1ELSE instead of :ELSE it also becomes ELSE
                         var lastSix = writer.ReadLast(6);
                         if (lastSix[1] == ':' && Constants.AsciiDigits.Contains(lastSix[0]))
-                            writer.Replace(": ELSE");
+                            writer.Replace(": ELSE", 6);
                         else
-                            writer.Replace(lastSix[1] + "ELSE");
+                            writer.Replace(":ELSE", 6);
                     }
 
                     // token followed by token or number is separated by a space,
@@ -388,8 +391,6 @@ namespace IronBasic.Compilor
                     {
                         writer.Write(' ');
                     }
-
-                    writer.Write(keyword);
                 }
             }
         }

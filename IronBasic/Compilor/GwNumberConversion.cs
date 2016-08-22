@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Numerics;
 using IronBasic.Runtime.Types;
 
 namespace IronBasic.Compilor
@@ -60,7 +61,7 @@ namespace IronBasic.Compilor
 
             var exp10 = 0;
             var exponent = 0;
-            var mantissa = 0;
+            var mantissa = 0UL;
             var digits = 0;
             var zeros = 0;
 
@@ -91,7 +92,7 @@ namespace IronBasic.Compilor
                     if (Constants.AsciiDigits.Contains(c))
                     {
                         mantissa *= 10;
-                        mantissa += c - '0';
+                        mantissa += (ulong)(c - '0');
 
                         if (foundPoint)
                             exp10 -= 1;
@@ -179,9 +180,10 @@ namespace IronBasic.Compilor
             {
                 IsNegitive = negitive,
                 Exponent = isDouble ? MbfDouble.Bias : MbfSingle.Bias,
-                Mantissa = mantissa
+                Mantissa = (BigInteger)mantissa
             };
 
+            builder.Normalize();
             while (exp10 < 0)
             {
                 builder.Divide10();

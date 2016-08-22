@@ -41,7 +41,8 @@ namespace IronBasic.Compilor.IO
 
         public int ReadUnsignedInteger()
         {
-            return 0x100 * Read() + Read();
+            var firstBit = Read();
+            return 0x100 * Read() + firstBit;
         }
 
         // Read two's complement little-endian int token to Python integer
@@ -72,7 +73,11 @@ namespace IronBasic.Compilor.IO
 
         private string ReadByte()
         {
-            return ReadChar().ToString();
+            var current = Read();
+            if (current == -1)
+                return string.Empty;
+
+            return current.ToString();
         }
 
         public string ReadNumber()
@@ -98,7 +103,7 @@ namespace IronBasic.Compilor.IO
                     return MbfSingle.FromBytes((byte)Read(), (byte)Read(), (byte)Read(), (byte)Read()).ToString(false, false);
                 case Token.DoubleConstant:
                     var bytes = new byte[8];
-                    BaseStream.Read(bytes, (int)BaseStream.Position, 8);
+                    BaseStream.Read(bytes, 0, 8);
                     return MbfDouble.FromBytes(bytes).ToString(false, false);
             }
 

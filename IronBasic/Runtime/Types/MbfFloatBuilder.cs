@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace IronBasic.Runtime.Types
 {
@@ -50,7 +51,7 @@ namespace IronBasic.Runtime.Types
 
         public bool IsNegitive { get; set; }
 
-        public long Mantissa { get; set; }
+        public BigInteger Mantissa { get; set; }
 
         public byte Exponent { get; set; }
 
@@ -98,7 +99,7 @@ namespace IronBasic.Runtime.Types
                 Mantissa += 0x100;
 
             // overflow?
-            if (Mantissa >= Math.Pow(0x100, MbfByteSize))
+            if (Mantissa >= (ulong)Math.Pow(0x100, MbfByteSize))
             {
                 Exponent += 1;
                 Mantissa >>= 1;
@@ -120,10 +121,10 @@ namespace IronBasic.Runtime.Types
         {
             var mantisa = Mantissa >> 8;
             long val;
-            if (Exponent < MbfBias)
-                val = mantisa << (Exponent - MbfBias);
+            if (Exponent > MbfBias)
+                val = (long)(mantisa << (Exponent - MbfBias));
             else
-                val = mantisa >> (-Exponent + MbfBias);
+                val = (long)(mantisa >> (-Exponent + MbfBias));
 
             if (IsNegitive)
                 return -val;
@@ -135,9 +136,9 @@ namespace IronBasic.Runtime.Types
         {
             long mantisa;
             if (Exponent > MbfBias)
-                mantisa = Mantissa << (Exponent - MbfBias);
+                mantisa = (long)(Mantissa << (Exponent - MbfBias));
             else
-                mantisa = Mantissa >> (-Exponent + MbfBias);
+                mantisa = (long)(Mantissa >> (-Exponent + MbfBias));
 
             // carry bit set? then round up (affect mantissa only, note we can be bigger
             // than our byte_size allows)
@@ -180,7 +181,8 @@ namespace IronBasic.Runtime.Types
             }
 
             // are these correct?
-            while (Mantissa <= Math.Pow(2, MbfMantissaBits + 8 - 1)) // 0x7fffffffffffffff: # < 2**63
+            var expectedValue = BigInteger.Pow(2, MbfMantissaBits + 8 - 1);
+            while (Mantissa <= expectedValue) // 0x7fffffffffffffff: # < 2**63
             {
                 // Undeflow
                 if (Exponent > 0)
@@ -189,7 +191,8 @@ namespace IronBasic.Runtime.Types
                 Mantissa <<= 1;
             }
 
-            while (Mantissa > Math.Pow(2, MbfMantissaBits + 8)) // 0xffffffffffffffff: # 2**64 or 0x100**8
+            expectedValue = BigInteger.Pow(2, MbfMantissaBits + 8);
+            while (Mantissa > expectedValue) // 0xffffffffffffffff: # 2**64 or 0x100**8
             {
                 // Overflow
                 if (Exponent == 0xff)
@@ -220,7 +223,7 @@ namespace IronBasic.Runtime.Types
             return new MbfSingle(IsNegitive, Mantissa, Exponent);
         }
 
-        public void Add(MbfFloat right)
+        public void Add(MbfFloat right, bool normalize = true)
         {
             if (right.IsZero)
                 return;
@@ -230,6 +233,7 @@ namespace IronBasic.Runtime.Types
                 Mantissa = right.Mantissa;
                 Exponent = right.Exponent;
                 IsNegitive = right.IsNegitive;
+                return;
             }
 
             // ensure right has largest exponent
@@ -250,6 +254,8 @@ namespace IronBasic.Runtime.Types
                 Mantissa >>= 1;
             }
 
+            var bI = (BigInteger)Mantissa;
+
             // add mantissas, taking sign into account
             if (IsNegitive == right.IsNegitive)
                 Mantissa += right.Mantissa;
@@ -264,7 +270,8 @@ namespace IronBasic.Runtime.Types
                 }
             }
 
-            Normalize();
+            if (normalize)
+                Normalize();
         }
 
         public void Subtract(MbfFloat right)
@@ -345,7 +352,7 @@ namespace IronBasic.Runtime.Types
                 ? (MbfFloat)new MbfDouble(IsNegitive, Mantissa, (byte)(Exponent + 2))
                 : new MbfSingle(IsNegitive, Mantissa, (byte)(Exponent + 2));
 
-            Add(copy);
+            Add(copy, false);
             Exponent += 1;
             Normalize();
         }
@@ -367,9 +374,6 @@ namespace IronBasic.Runtime.Types
         /// <summary>
         /// Return exponentiation needed to bring float into range.
         /// </summary>
-        /// <param name="min"></param>
-        /// <param name="max"></param>
-        /// <param name="exponent10"></param>
         public long BringToRange(out int exponent10)
         {
             var min = IsDouble ? (MbfFloat) MbfDouble.MinValue : MbfSingle.MinValue;
@@ -399,7 +403,7 @@ namespace IronBasic.Runtime.Types
             Add(IsDouble ? (MbfFloat)MbfDouble.Half : MbfSingle.Half);
 
             // then truncate to int (this throws away carry)
-            var number = Math.Abs(TruncateInt64());
+            var number = TruncateInt64();
             if (IsNegitive)
                 number += 1;
 

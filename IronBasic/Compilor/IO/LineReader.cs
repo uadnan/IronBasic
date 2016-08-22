@@ -27,7 +27,8 @@ namespace IronBasic.Compilor.IO
         public override int Peek()
         {
             var value = BaseStream.ReadByte();
-            BaseStream.Seek(-1, SeekOrigin.Current);
+            if (value != -1)
+                BaseStream.Seek(-1, SeekOrigin.Current);
             return value;
         }
 
@@ -82,7 +83,8 @@ namespace IronBasic.Compilor.IO
         public int SkipPeek(params int[] toSkip)
         {
             var value = SkipRead(toSkip);
-            BaseStream.Seek(-1, SeekOrigin.Current);
+            if (value != -1)
+                BaseStream.Seek(-1, SeekOrigin.Current);
             return value;
         }
 
