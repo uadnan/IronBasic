@@ -48,6 +48,9 @@
     <Compile Include="Compilor\IO\TokenisedLineReader.cs" />
     <Compile Include="Compilor\KeywordAttribute.cs" />
     <Compile Include="Compilor\IO\LineReader.cs" />
+    <Compile Include="Runtime\Exceptions\BasicExceptionCode.cs" />
+    <Compile Include="Runtime\Exceptions\BasicRuntimeException.cs" />
+    <Compile Include="Runtime\Exceptions\EmulatorExceptions.cs" />
     <Compile Include="Runtime\Types\MbfFloatBuilder.cs" />
     <Compile Include="Compilor\Extensions.cs" />
     <Compile Include="Compilor\Tokeniser.cs" />
