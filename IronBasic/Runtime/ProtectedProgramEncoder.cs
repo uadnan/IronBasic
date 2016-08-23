@@ -2,7 +2,10 @@
 
 namespace IronBasic.Runtime
 {
-    public static class ProtectedFileDecoder
+    /// <summary>
+    /// Encoder to encode/decode Protected program
+    /// </summary>
+    public static class ProtectedProgramEncoder
     {
         private static readonly int[] Key1 =
         {
@@ -14,6 +17,12 @@ namespace IronBasic.Runtime
             0x1E, 0x1D, 0xC4, 0x77, 0x26, 0x97, 0xE0, 0x74, 0x59, 0x88, 0x7C
         };
 
+        /// <summary>
+        /// Reads bytes from <paramref name="inputStream"/>, decodes byte by byte
+        /// and write decoded byte to output stream
+        /// </summary>
+        /// <param name="inputStream">Stream of encoded program</param>
+        /// <returns>Stream of decoded program</returns>
         public static Stream Decode(Stream inputStream)
         {
             var outputStream = new MemoryStream();
@@ -39,6 +48,12 @@ namespace IronBasic.Runtime
             return outputStream;
         }
 
+        /// <summary>
+        /// Reads bytes from <paramref name="inputStream"/>, encodes byte by byte
+        /// and write encoded byte to output stream
+        /// </summary>
+        /// <param name="inputStream">Stream of decoded program</param>
+        /// <returns>Stream of encoded program</returns>
         public static Stream Encode(Stream inputStream)
         {
             var outputStream = new MemoryStream();

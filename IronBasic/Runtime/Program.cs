@@ -5,18 +5,17 @@ using System.IO;
 using System.Linq;
 using IronBasic.Compilor;
 using IronBasic.Compilor.IO;
-using IronBasic.Runtime.Exceptions;
 
 namespace IronBasic.Runtime
 {
-    public enum BasicProgramMode : byte
+    public enum ProgramMode : byte
     {
         Ascii = 0x00,
         Binary = 0xff,
         Protected = 0xfe
     }
 
-    public class BasicProgram
+    public class Program
     {
         private const int BasicLastLineNumber = 65536;
 
@@ -24,7 +23,7 @@ namespace IronBasic.Runtime
         private bool _protected;
         private int? _lastStored;
 
-        public BasicProgram(Tokeniser tokeniser, int maxLineNumber = BasicLastLineNumber,
+        public Program(Tokeniser tokeniser, int maxLineNumber = BasicLastLineNumber,
             bool allowProtect = false, bool allowCodePoke = false, int position = 0)
         {
             Tokeniser = tokeniser;
@@ -142,23 +141,23 @@ namespace IronBasic.Runtime
             return lineNumber;
         }
 
-        private static BasicProgramMode FindDocumentType(Stream inputStream)
+        private static ProgramMode FindDocumentType(Stream inputStream)
         {
             var firstByte = inputStream.ReadByte();
-            BasicProgramMode programMode;
+            ProgramMode programMode;
             switch (firstByte)
             {
-                case (byte)BasicProgramMode.Binary:
-                    programMode = BasicProgramMode.Binary;
+                case (byte)ProgramMode.Binary:
+                    programMode = ProgramMode.Binary;
                     break;
-                case (byte)BasicProgramMode.Protected:
-                    programMode = BasicProgramMode.Protected;
+                case (byte)ProgramMode.Protected:
+                    programMode = ProgramMode.Protected;
                     break;
                 case 0xfc:
                     throw new NotSupportedException("Q-BASIC File Type is not supported");
                 default:
                     inputStream.Seek(0, SeekOrigin.Begin);
-                    return BasicProgramMode.Ascii;
+                    return ProgramMode.Ascii;
             }
 
             return programMode;
@@ -176,19 +175,19 @@ namespace IronBasic.Runtime
             Bytecode.WriteByte((byte)programMode);
             switch (programMode)
             {
-                case BasicProgramMode.Binary:
+                case ProgramMode.Binary:
                     stream.CopyTo(Bytecode);
                     break;
-                case BasicProgramMode.Protected:
+                case ProgramMode.Protected:
                     _protected = AllowProtect;
-                    ProtectedFileDecoder.Decode(stream).CopyTo(Bytecode);
+                    ProtectedProgramEncoder.Decode(stream).CopyTo(Bytecode);
                     break;
-                case BasicProgramMode.Ascii:
+                case ProgramMode.Ascii:
                     Merge(stream);
                     break;
             }
 
-            if (rebuildLineNumber && programMode != BasicProgramMode.Ascii)
+            if (rebuildLineNumber && programMode != ProgramMode.Ascii)
                 RebuildLineNumbers();
         }
 
@@ -215,7 +214,7 @@ namespace IronBasic.Runtime
                     // we have read the :
                     var next = stream.SkipPeek(Constants.AsciiWhitepsace);
                     if (next != -1 && next != '\0')
-                        throw new BasicRuntimeException(BasicExceptionCode.DirectStatementInFile);
+                        throw new ReplRuntimeException(ReplExceptionCode.DirectStatementInFile);
                 }
 
             }
@@ -276,7 +275,7 @@ namespace IronBasic.Runtime
         private void StoreLine(Stream stream)
         {
             if (_protected)
-                throw new BasicRuntimeException(BasicExceptionCode.IllegalFunctionCall);
+                throw new ReplRuntimeException(ReplExceptionCode.IllegalFunctionCall);
 
             stream.Seek(1, SeekOrigin.Begin);
             var scanLine = stream.ReadLineNumber();
@@ -286,7 +285,7 @@ namespace IronBasic.Runtime
             var empty = nextNonWhitespace == -1 || nextNonWhitespace == '\0';
             var codePosition = FindCodePosition(scanLine, scanLine);
             if (empty && codePosition.Deleteable.Length == 0)
-                throw new BasicRuntimeException(BasicExceptionCode.UndefinedLineNumber);
+                throw new ReplRuntimeException(ReplExceptionCode.UndefinedLineNumber);
 
             // read the remainder of the program into a buffer to be pasted back after the write
             Bytecode.Seek(codePosition.AfterPosition, SeekOrigin.Begin);
@@ -367,10 +366,10 @@ namespace IronBasic.Runtime
         /// </summary>
         /// <param name="stream">Stream to which to save</param>
         /// <param name="mode">Mode in which to save program</param>
-        public void SaveTo(Stream stream, BasicProgramMode mode)
+        public void SaveTo(Stream stream, ProgramMode mode)
         {
-            if (mode != BasicProgramMode.Protected && _protected)
-                throw new BasicRuntimeException(BasicExceptionCode.IllegalFunctionCall);
+            if (mode != ProgramMode.Protected && _protected)
+                throw new ReplRuntimeException(ReplExceptionCode.IllegalFunctionCall);
 
             var current = Bytecode.Position;
 
@@ -378,13 +377,13 @@ namespace IronBasic.Runtime
             Bytecode.Seek(1, SeekOrigin.Begin);
             switch (mode)
             {
-                case BasicProgramMode.Binary:
+                case ProgramMode.Binary:
                     Bytecode.CopyTo(stream);
                     break;
-                case BasicProgramMode.Protected:
-                    ProtectedFileDecoder.Encode(Bytecode).CopyTo(stream);
+                case ProgramMode.Protected:
+                    ProtectedProgramEncoder.Encode(Bytecode).CopyTo(stream);
                     break;
-                case BasicProgramMode.Ascii:
+                case ProgramMode.Ascii:
                     while (true)
                     {
                         var output = Tokeniser.DetokeniseLine(Bytecode);
@@ -425,7 +424,7 @@ namespace IronBasic.Runtime
         {
             var codePosition = FindCodePosition(startLine, lastLine);
             if (codePosition.Deleteable.Length == 0) // no lines selected
-                throw new BasicRuntimeException(BasicExceptionCode.IllegalFunctionCall);
+                throw new ReplRuntimeException(ReplExceptionCode.IllegalFunctionCall);
 
             Bytecode.Seek(codePosition.AfterPosition, SeekOrigin.Begin);
             var rest = Bytecode.ReadToEnd();
@@ -443,7 +442,7 @@ namespace IronBasic.Runtime
         public string[] GetLines(int startLine, int endLine)
         {
             if (_protected)
-                throw new BasicRuntimeException(BasicExceptionCode.IllegalFunctionCall);
+                throw new ReplRuntimeException(ReplExceptionCode.IllegalFunctionCall);
 
             // 65529 is max insertable line number for GW-BASIC 3.23.
             // however, 65530-65535 are executed if present in tokenised form.
@@ -481,7 +480,7 @@ namespace IronBasic.Runtime
             // check if linebuf is an empty line after the line number
             isEmpty = next == -1 || next == '\0';
             if (Constants.AsciiDigits.Contains(next))
-                throw new BasicRuntimeException(BasicExceptionCode.SyntaxError);
+                throw new ReplRuntimeException(ReplExceptionCode.SyntaxError);
 
             return scanLine;
         }

@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Reflection;
 
-namespace IronBasic.Runtime.Exceptions
+namespace IronBasic.Runtime
 {
     [AttributeUsage(AttributeTargets.Field)]
     internal sealed class ExceptionMessageAttribute : Attribute
@@ -13,7 +14,10 @@ namespace IronBasic.Runtime.Exceptions
         public string Message { get; }
     }
 
-    public enum BasicExceptionCode
+    /// <summary>
+    /// REPL Exception Codes
+    /// </summary>
+    public enum ReplExceptionCode
     {
         [ExceptionMessage("NEXT without FOR")]
         NextWithoutFor = 1,
@@ -125,5 +129,25 @@ namespace IronBasic.Runtime.Exceptions
         PathNotFound = 76,
         [ExceptionMessage("Deadlock")]
         Deadlock = 77
+    }
+
+    public static class ReplExceptionCodeExtensions
+    {
+        private static readonly Type ReplExceptionCodeType = typeof(ReplExceptionCode);
+
+        /// <summary>
+        /// Gets the message associated with <see cref="ReplExceptionCode"/>
+        /// </summary>
+        /// <param name="code">Whose message to set</param>
+        /// <returns>Associated message if there is any otherwise null</returns>
+        public static string GetMessage(this ReplExceptionCode code)
+        {
+            var members = ReplExceptionCodeType.GetMember(code.ToString());
+            if (members.Length == 0)
+                return null;
+
+            var exceptionMessageAttribute = members[0].GetCustomAttribute<ExceptionMessageAttribute>();
+            return exceptionMessageAttribute?.Message;
+        }
     }
 }
