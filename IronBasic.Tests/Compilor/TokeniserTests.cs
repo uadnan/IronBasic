@@ -212,10 +212,10 @@ namespace IronBasic.Tests.Compilor
             foreach (var line in FormattedLines)
             {
                 var tokenisedLine = tokeniser.Tokenise(line);
-                var detokenisedLine = tokeniser.Detokenise(tokenisedLine).Text;
+                var detokenisedLine = tokeniser.DetokeniseLine(tokenisedLine).Text;
 
                 var retokenizedLine = tokeniser.Tokenise(detokenisedLine);
-                var redetokenisedLine = tokeniser.Detokenise(retokenizedLine).Text;
+                var redetokenisedLine = tokeniser.DetokeniseLine(retokenizedLine).Text;
 
                 Assert.IsTrue(detokenisedLine == redetokenisedLine, $"Either tokenisation or detokenisation of '{line}' has some serious issues");
             }

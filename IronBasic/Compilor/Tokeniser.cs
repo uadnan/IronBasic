@@ -395,9 +395,9 @@ namespace IronBasic.Compilor
             }
         }
 
-        private int Detokenise(TokenisedLineReader reader, DetokenisedLineWriter writer)
+        private int DetokeniseLine(TokenisedLineReader reader, DetokenisedLineWriter writer)
         {
-            var currentLine = reader.ReadLineNumber();
+            var currentLine = reader.BaseStream.ReadLineNumber();
             if (currentLine < 0)
                 return -1;
 
@@ -419,11 +419,21 @@ namespace IronBasic.Compilor
         /// <summary>
         /// Convert a tokenised program line to ascii text
         /// </summary>
-        /// <param name="line">Tokenised Line Stream</param>
+        /// <param name="line">Tokenised Line</param>
         /// <returns>Detokenised ASCII line</returns>
-        public DetokeniserOutput Detokenise(string line)
+        public DetokeniserOutput DetokeniseLine(string line)
         {
-            using (var inputStream = new TokenisedLineReader(line, _tokenKeywordMap))
+            return DetokeniseLine(line.AsStream());
+        }
+
+        /// <summary>
+        /// Convert a tokenised program line to ascii text
+        /// </summary>
+        /// <param name="stream">Tokenized line stream</param>
+        /// <returns>Detokenised ASCII line</returns>
+        public DetokeniserOutput DetokeniseLine(Stream stream)
+        {
+            using (var inputStream = new TokenisedLineReader(stream, _tokenKeywordMap))
             using (var outputStream = new MemoryStream())
             {
                 if (inputStream.Peek() == '\0')
@@ -432,7 +442,7 @@ namespace IronBasic.Compilor
                 int lineNumber;
                 using (var outputWriter = new DetokenisedLineWriter(outputStream))
                 {
-                    lineNumber = Detokenise(inputStream, outputWriter);
+                    lineNumber = DetokeniseLine(inputStream, outputWriter);
                 }
 
                 return new DetokeniserOutput(lineNumber, Encoding.UTF8.GetString(outputStream.ToArray()));

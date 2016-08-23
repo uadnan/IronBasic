@@ -10,33 +10,9 @@ namespace IronBasic.Compilor.IO
     {
         private readonly IDictionary<string, string> _tokenKeywordMap;
 
-        public TokenisedLineReader(string value, IDictionary<string, string> tokenKeywordMap) : base(value)
+        public TokenisedLineReader(Stream stream, IDictionary<string, string> tokenKeywordMap) : base(stream)
         {
             _tokenKeywordMap = tokenKeywordMap;
-        }
-
-        /// <summary>
-        /// Parse line number and leave pointer at first char of line.
-        /// </summary>
-        public int ReadLineNumber()
-        {
-            var word = Read(2);
-            if (word == "\0\0" || word.Length < 2)
-            {
-                if (word.Length > 0)
-                    BaseStream.Seek(-1 * word.Length, SeekOrigin.Current);
-
-                return -1;
-            }
-
-            word = Read(2);
-            if (word.Length < 2)
-            {
-                BaseStream.Seek(-1 * word.Length - 2, SeekOrigin.Current);
-                return -1;
-            }
-
-            return word.ToUnsignedInteger();
         }
 
         public int ReadUnsignedInteger()

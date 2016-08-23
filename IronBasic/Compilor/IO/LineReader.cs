@@ -43,26 +43,11 @@ namespace IronBasic.Compilor.IO
 
         public string Peek(int length)
         {
-            var word = Read(length);
+            var word = BaseStream.Read(length);
             if (word.Length > 0)
                 BaseStream.Seek(-1 * word.Length, SeekOrigin.Current);
 
             return word;
-        }
-
-        public string Read(int length)
-        {
-            var builder = new StringBuilder();
-            for (var i = 0; i < length; i++)
-            {
-                var current = Read();
-                if (current == -1)
-                    break;
-
-                builder.Append((char)current);
-            }
-
-            return builder.ToString();
         }
 
         public char ReadChar()
@@ -72,20 +57,12 @@ namespace IronBasic.Compilor.IO
 
         public int SkipRead(params int[] toSkip)
         {
-            while (true)
-            {
-                var value = BaseStream.ReadByte();
-                if (value == -1 || !toSkip.Contains(value))
-                    return value;
-            }
+            return BaseStream.SkipRead(toSkip);
         }
 
         public int SkipPeek(params int[] toSkip)
         {
-            var value = SkipRead(toSkip);
-            if (value != -1)
-                BaseStream.Seek(-1, SeekOrigin.Current);
-            return value;
+            return BaseStream.SkipPeek(toSkip);
         }
 
         protected void ReadUntil(StringBuilder builder, params int[] toSkip)
