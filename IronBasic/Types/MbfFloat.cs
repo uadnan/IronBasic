@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
-namespace IronBasic.Runtime.Types
+namespace IronBasic.Types
 {
     /// <summary>
     /// Floating-point number in Microsoft Binary Format.
     /// <see cref="http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_20245266.html"/>
     /// <see cref="http://www.boyet.com/Articles/MBFSinglePrecision.html"/>
     /// </summary>
-    public abstract class MbfFloat : ICloneable, IMbfFloat
+    public abstract class MbfFloat : ICloneable
     {
         public const byte TrueBias = 128;
 
@@ -505,7 +506,7 @@ namespace IronBasic.Runtime.Types
             else if (screen && !write)
                     builder.Append(' ');
 
-            var mbf = new MbfFloatBuilder(this);
+            var mbf = new MbfFloatParser(this);
             int exponent10;
 
             var number = mbf.BringToRange(out exponent10);
@@ -529,6 +530,163 @@ namespace IronBasic.Runtime.Types
             }
 
             return builder.ToString();
+        }
+
+        /// <summary>
+        /// Parse string value to <see cref="MbfFloat"/>
+        /// </summary>
+        /// <param name="value">String value to parse</param>
+        /// <param name="allowNonNumbers">Allow non-number chars in string value</param>
+        /// <returns><see cref="MbfDouble"/> if value if double else <see cref="MbfSingle"/></returns>
+        public static MbfFloat Parse(string value, bool allowNonNumbers = true)
+        {
+            var foundSign = false;
+            var foundPoint = false;
+            var foundExpression = false;
+
+            var foundExpSign = false;
+            var expressionNegitive = false;
+            var negitive = false;
+
+            var exp10 = 0;
+            var exponent = 0;
+            var mantissa = 0UL;
+            var digits = 0;
+            var zeros = 0;
+
+            var isDouble = false;
+            var isSingle = false;
+
+            foreach (var c in value)
+            {
+                // ignore whitespace throughout (x = 1   234  56  .5  means x=123456.5 in gw!)
+                if (Constants.Whitepsace.Contains(c))
+                    continue;
+
+                // determine sign
+                if (!foundSign)
+                {
+                    foundSign = true;
+                    // number has started; if no sign encountered here, sign must be pos.
+                    if (c == '+' || c == '-')
+                    {
+                        negitive = c == '-';
+                        continue;
+                    }
+                }
+
+                // parse numbers and decimal points, until 'E' or 'D' is found
+                if (!foundExpression)
+                {
+                    if (Constants.DecimalDigits.Contains(c))
+                    {
+                        mantissa *= 10;
+                        mantissa += (ulong)(c - '0');
+
+                        if (foundPoint)
+                            exp10 -= 1;
+
+                        // keep track of precision digits
+                        if (mantissa != 0)
+                        {
+                            digits += 1;
+                            if (foundPoint && c == '0')
+                                zeros += 1;
+                            else
+                                zeros = 0;
+                        }
+
+                        continue;
+                    }
+
+                    if (c == '.')
+                    {
+                        foundPoint = true;
+                        continue;
+                    }
+
+                    if ("DE".Contains(char.ToUpper(c)))
+                    {
+                        foundExpression = true;
+                        isDouble = c == 'D' || c == 'd';
+                        continue;
+                    }
+
+                    if (c == '!')
+                    {
+                        // makes it a single, even if more than eight digits specified
+                        isSingle = true;
+                        break;
+                    }
+
+                    if (c == '#')
+                    {
+                        isDouble = true;
+                        break;
+                    }
+
+                    if (allowNonNumbers)
+                        break;
+
+                    return null;
+                }
+
+                if (!foundExpSign)
+                {
+                    foundExpSign = true;
+                    // exponent has started; if no sign given, it must be pos.
+                    if (c == '-' || c == '+')
+                    {
+                        expressionNegitive = c == '-';
+                        continue;
+                    }
+                }
+
+                if (Constants.DecimalDigits.Contains(c))
+                {
+                    exponent *= 10;
+                    exponent += c - '0';
+                    continue;
+                }
+
+                if (allowNonNumbers)
+                    break;
+
+                return null;
+            }
+
+            if (expressionNegitive)
+                exp10 -= exponent;
+            else
+                exp10 += exponent;
+
+            // eight or more digits means double, unless single override
+            if (digits - zeros > 7 && !isSingle)
+                isDouble = true;
+
+            mantissa *= 0x100;
+            var builder = new MbfFloatParser(isDouble)
+            {
+                IsNegitive = negitive,
+                Exponent = isDouble ? MbfDouble.Bias : MbfSingle.Bias,
+                Mantissa = mantissa
+            };
+
+            builder.Normalize();
+            while (exp10 < 0)
+            {
+                builder.Divide10();
+                exp10 += 1;
+            }
+
+            while (exp10 > 0)
+            {
+                builder.Multiply10();
+                exp10 += 1;
+            }
+
+            builder.Normalize();
+            return builder.ToMbfFloat();
         }
     }
 }

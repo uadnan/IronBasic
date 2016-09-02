@@ -3,9 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace IronBasic.Compilor
+namespace IronBasic.Utils
 {
-    public static class Extensions
+    internal static class Utilities
     {
         internal static string ToCharString(this int value)
         {
@@ -24,10 +24,7 @@ namespace IronBasic.Compilor
         public static int TryParseInt32(this string value, int fallbackValue = 0)
         {
             int intVal;
-            if (int.TryParse(value, out intVal))
-                return intVal;
-
-            return fallbackValue;
+            return int.TryParse(value, out intVal) ? intVal : fallbackValue;
         }
 
         public static int TrimEnd(this StringBuilder builder, params int[] chars)

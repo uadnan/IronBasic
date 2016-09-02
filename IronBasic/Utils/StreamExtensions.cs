@@ -2,8 +2,9 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using IronBasic.Compilor;
 
-namespace IronBasic.Compilor.IO
+namespace IronBasic.Utils
 {
     internal static class StreamExtensions
     {
@@ -171,6 +172,11 @@ namespace IronBasic.Compilor.IO
             {
                 stream.WriteByte((byte)ch);
             }
+        }
+
+        public static int SkipWhitespace(this Stream stream)
+        {
+            return SkipPeek(stream, Constants.Whitepsace);
         }
     }
 }

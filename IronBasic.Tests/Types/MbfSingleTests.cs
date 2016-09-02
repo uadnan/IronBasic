@@ -1,7 +1,7 @@
-﻿using IronBasic.Runtime.Types;
+﻿using IronBasic.Types;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace IronBasic.Tests.Runtime.Types
+namespace IronBasic.Tests.Types
 {
     [TestClass]
     public class MbfSingleTests

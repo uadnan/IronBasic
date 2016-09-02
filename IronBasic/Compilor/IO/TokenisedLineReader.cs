@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using IronBasic.Runtime.Types;
+using IronBasic.Types;
+using IronBasic.Utils;
 
 namespace IronBasic.Compilor.IO
 {
-    public class TokenisedLineReader : LineReader
+    /// <summary>
+    /// Reads tokenized program line
+    /// </summary>
+    internal class TokenisedLineReader : LineReader
     {
         private readonly IDictionary<string, string> _tokenKeywordMap;
 
@@ -54,6 +58,11 @@ namespace IronBasic.Compilor.IO
                 return string.Empty;
 
             return current.ToString();
+        }
+
+        public int ReadLineNumber()
+        {
+            return BaseStream.ReadLineNumber();
         }
 
         public string ReadNumber()

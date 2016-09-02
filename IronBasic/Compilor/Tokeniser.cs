@@ -3,9 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using IronBasic.Compilor.IO;
+using IronBasic.Utils;
 
 namespace IronBasic.Compilor
 {
+    /// <summary>
+    /// Tokenizer to convertion between tokenized and de-tokenized program
+    /// </summary>
     public class Tokeniser
     {
         private readonly IDictionary<string, string> _tokenKeywordMap;
@@ -13,7 +17,7 @@ namespace IronBasic.Compilor
 
         public Tokeniser(Grammar grammar)
         {
-            _tokenKeywordMap = Tokens.GetKeywords(grammar);
+            _tokenKeywordMap = Tokens.GetKeywordTokens(grammar);
             _keywordTokenMap = _tokenKeywordMap.ToDictionary(p => p.Value, p => p.Key);
         }
 
@@ -57,7 +61,7 @@ namespace IronBasic.Compilor
 
             if (current == '&') // handle hex or oct constants
             {
-                reader.ReadChar();
+                reader.ReadAsChar();
                 if (char.ToUpper((char)reader.Peek()) == 'H')
                 {
                     // hex constant
@@ -66,7 +70,7 @@ namespace IronBasic.Compilor
                 else
                     writer.WriteOctal(reader.ReadOctal());
             }
-            else if (Constants.AsciiDigits.Contains(current) ||
+            else if (Constants.DecimalDigits.Contains(current) ||
                      current == '.' || current == '+' || current == '-')
             {
                 // handle other numbers
@@ -78,18 +82,18 @@ namespace IronBasic.Compilor
             {
                 // why is this here?
                 // this looks wrong but hasn't hurt so far
-                reader.BaseStream.Seek(-1, SeekOrigin.Current);
+                reader.Seek(-1);
             }
         }
 
         private void TokeniseRemarks(DetokenisedLineReader reader, TokenisedLineWriter writer)
         {
-            writer.Write(reader.ReadUntil('\r', '\0'));
+            writer.Write(reader.ReadUntil(Constants.RemarkTerminator));
         }
 
         private void Tokenise(DetokenisedLineReader reader, TokenisedLineWriter writer)
         {
-            var value = reader.SkipPeek(Constants.AsciiWhitepsace);
+            var value = reader.SkipWhitespace();
             if (value == -1)
                 return; // EOF
 
@@ -115,7 +119,7 @@ namespace IronBasic.Compilor
                 if (current == '\r' || current == -1) // EOF or 
                     break;
 
-                if (Constants.AsciiWhitepsace.Contains(current)) // whitespace
+                if (Constants.Whitepsace.Contains(current)) // whitespace
                 {
                     reader.Read();
                     writer.Write((char)current);
@@ -126,7 +130,7 @@ namespace IronBasic.Compilor
                 }
 
                 // handle jump numbers
-                else if (allowJump && allowNumber && (Constants.AsciiDigits.Contains(current) || current == '.'))
+                else if (allowJump && allowNumber && (Constants.DecimalDigits.Contains(current) || current == '.'))
                 {
                     TokeniseJumpNumbers(reader, writer);
                 }
@@ -136,13 +140,13 @@ namespace IronBasic.Compilor
                 // number starting with . or & are always parsed
 
                 else if (current == '&' || current == '.' ||
-                         (allowNumber && !allowJump && Constants.AsciiDigits.Contains(current)))
+                         (allowNumber && !allowJump && Constants.DecimalDigits.Contains(current)))
                 {
                     TokeniseNumber(reader, writer);
                 }
 
                 // operator keywords ('+', '-', '=', '/', '\\', '^', '*', '<', '>')
-                else if (Constants.AsciiOperators.Contains(current))
+                else if (Constants.Operators.Contains(current))
                 {
                     reader.Read();
 
@@ -169,14 +173,14 @@ namespace IronBasic.Compilor
                 {
                     reader.Read();
                     writer.Write(Token.KeywordPrint);
-                    if (!Constants.AsciiWhitepsace.Contains(reader.Peek()))
+                    if (!Constants.Whitepsace.Contains(reader.Peek()))
                         writer.Write(' ');
 
                     allowNumber = true;
                 }
 
                 // keywords & variable names
-                else if (Constants.AsciiLetters.Contains(current))
+                else if (Constants.Letters.Contains(current))
                 {
                     var word = reader.ReadWord();
                     writer.Write(word);
@@ -317,7 +321,7 @@ namespace IronBasic.Compilor
                 }
                 else if (Tokens.NumberTypeTokens.Contains(current))
                 {
-                    reader.BaseStream.Seek(-1, SeekOrigin.Current);
+                    reader.Seek(-1);
                     writer.Write(reader.ReadNumber());
                 }
                 else if (Tokens.LineNumberTokens.Contains(current))
@@ -342,13 +346,13 @@ namespace IronBasic.Compilor
                 else
                 {
                     writer.Flush();
-                    reader.BaseStream.Seek(-1, SeekOrigin.Current);
+                    reader.Seek(-1);
                     if (writer.BaseStream.Length > 0)
                     {
                         // letter or number followed by token is separated by a space
                         writer.BaseStream.Seek(-1, SeekOrigin.Current);
                         var lastByte = writer.BaseStream.ReadByte();
-                        if (Constants.AsciiDigits.Contains(lastByte) && !Constants.AsciiOperators.Contains(current))
+                        if (Constants.DecimalDigits.Contains(lastByte) && !Constants.Operators.Contains(current))
                             writer.Write(' ');
                     }
 
@@ -371,7 +375,7 @@ namespace IronBasic.Compilor
                         // note that anything before ELSE gets cut off,
                         // e.g. if we have 1ELSE instead of :ELSE it also becomes ELSE
                         var lastSix = writer.ReadLast(6);
-                        if (lastSix[1] == ':' && Constants.AsciiDigits.Contains(lastSix[0]))
+                        if (lastSix[1] == ':' && Constants.DecimalDigits.Contains(lastSix[0]))
                             writer.Replace(": ELSE", 6);
                         else
                             writer.Replace(":ELSE", 6);
@@ -397,7 +401,7 @@ namespace IronBasic.Compilor
 
         private int DetokeniseLine(TokenisedLineReader reader, DetokenisedLineWriter writer)
         {
-            var currentLine = reader.BaseStream.ReadLineNumber();
+            var currentLine = reader.ReadLineNumber();
             if (currentLine < 0)
                 return -1;
 

@@ -2,7 +2,10 @@
 
 namespace IronBasic.Compilor.IO
 {
-    public class LineWriter : StreamWriter
+    /// <summary>
+    /// Base class to write program line
+    /// </summary>
+    internal class LineWriter : StreamWriter
     {
         public LineWriter(Stream stream) : base(stream)
         {

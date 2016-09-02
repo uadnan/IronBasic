@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IronBasic.Compilor
+namespace IronBasic
 {
     [Flags]
     public enum Grammar

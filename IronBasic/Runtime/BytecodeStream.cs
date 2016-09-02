@@ -1,6 +1,7 @@
-﻿using IronBasic.Compilor.IO;
-using System;
+﻿using System;
 using System.IO;
+using System.Linq;
+using IronBasic.Utils;
 
 namespace IronBasic.Runtime
 {
@@ -25,11 +26,19 @@ namespace IronBasic.Runtime
         /// </summary>
         public void SkipUntilLineEnd()
         {
-            this.AwareSkip(new[]
-            {
-                -1,
-                '\0'
-            });
+            this.AwareSkip(Constants.LineTerminators);
+        }
+
+        /// <summary>
+        /// Skip whitespace, peek and raise error if not in range.
+        /// </summary>
+        /// <param name="exceptionToRaise">Exception to raise in case next char is not in range</param>
+        /// <param name="acceptable">List of acceptable chars</param>
+        public void Require(ReplExceptionCode exceptionToRaise = ReplExceptionCode.SyntaxError, params int[] acceptable)
+        {
+            var nextNonWhiteSpace = this.SkipWhitespace();
+            if (!acceptable.Contains(nextNonWhiteSpace))
+                throw new ReplRuntimeException(exceptionToRaise);
         }
     }
 }

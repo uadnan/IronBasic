@@ -8,12 +8,12 @@ namespace IronBasic.Runtime
     /// </summary>
     public class ReplRuntimeException : Exception
     {
-        public ReplRuntimeException(ReplExceptionCode codes) : base($"REPL Exception: {codes}")
+        public ReplRuntimeException(ReplExceptionCode code) : base($"REPL Exception: {code}")
         {
-            Codes = codes;
+            Code = code;
         }
 
-        public ReplExceptionCode Codes { get; }
+        public ReplExceptionCode Code { get; }
     }
 
     /// <summary>

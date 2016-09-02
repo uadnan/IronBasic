@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using IronBasic.Compilor;
-using IronBasic.Compilor.IO;
+using IronBasic.Utils;
 
 namespace IronBasic.Runtime
 {
@@ -15,6 +15,9 @@ namespace IronBasic.Runtime
         Protected = 0xfe
     }
 
+    /// <summary>
+    /// In-memory representation of GW-BASIC program
+    /// </summary>
     public class Program
     {
         private const int BasicLastLineNumber = 65536;
@@ -212,7 +215,7 @@ namespace IronBasic.Runtime
                 else
                 {
                     // we have read the :
-                    var next = stream.SkipPeek(Constants.AsciiWhitepsace);
+                    var next = stream.SkipWhitespace();
                     if (next != -1 && next != '\0')
                         throw new ReplRuntimeException(ReplExceptionCode.DirectStatementInFile);
                 }
@@ -281,7 +284,7 @@ namespace IronBasic.Runtime
             var scanLine = stream.ReadLineNumber();
 
             // check if stream is an empty line after the line number
-            var nextNonWhitespace = stream.SkipRead(Constants.AsciiWhitepsace);
+            var nextNonWhitespace = stream.SkipWhitespace();
             var empty = nextNonWhitespace == -1 || nextNonWhitespace == '\0';
             var codePosition = FindCodePosition(scanLine, scanLine);
             if (empty && codePosition.Deleteable.Length == 0)
@@ -475,11 +478,11 @@ namespace IronBasic.Runtime
         {
             stream.Seek(1, SeekOrigin.Begin);
             var scanLine = stream.ReadLineNumber();
-            var next = stream.SkipRead(Constants.AsciiWhitepsace);
+            var next = stream.SkipWhitespace();
 
             // check if linebuf is an empty line after the line number
             isEmpty = next == -1 || next == '\0';
-            if (Constants.AsciiDigits.Contains(next))
+            if (Constants.DecimalDigits.Contains(next))
                 throw new ReplRuntimeException(ReplExceptionCode.SyntaxError);
 
             return scanLine;

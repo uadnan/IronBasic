@@ -53,9 +53,9 @@
   <ItemGroup>
     <Compile Include="Compilor\TokeniserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Runtime\Types\MbfDoubleTests.cs" />
-    <Compile Include="Runtime\Types\MbfFloatAsserts.cs" />
-    <Compile Include="Runtime\Types\MbfSingleTests.cs" />
+    <Compile Include="Types\MbfDoubleTests.cs" />
+    <Compile Include="Types\MbfFloatAsserts.cs" />
+    <Compile Include="Types\MbfSingleTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IronBasic\IronBasic.csproj">

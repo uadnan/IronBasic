@@ -1,6 +1,7 @@
 ﻿using System.Linq;
+using IronBasic.Compilor;
 
-namespace IronBasic.Compilor
+namespace IronBasic
 {
     internal static class Constants
     {
@@ -40,48 +41,14 @@ namespace IronBasic.Compilor
             Token.KeywordReturn
         };
 
-        public static readonly int[] AsciiWhitepsace =
+        public static readonly int[] Whitepsace =
         {
             ' ',
             '\t',
             '\n'
         };
 
-        public static readonly int[] AsciiDigits =
-        {
-            '0',
-            '1',
-            '2',
-            '3',
-            '4',
-            '5',
-            '6',
-            '7',
-            '8',
-            '9'
-        };
-
-        public static readonly int[] AsciiHexNumbers =
-        {
-            '0',
-            '1',
-            '2',
-            '3',
-            '4',
-            '5',
-            '6',
-            '7',
-            '8',
-            '9',
-            'A', 'a',
-            'B', 'b',
-            'C', 'c',
-            'D', 'd',
-            'E', 'e',
-            'F', 'f'
-        };
-
-        public static readonly int[] AsciiOctalNumbers =
+        public static readonly int[] OctalDigits =
         {
             '0',
             '1',
@@ -93,7 +60,23 @@ namespace IronBasic.Compilor
             '7'
         };
 
-        public static readonly int[] AsciiOperators =
+        public static readonly int[] DecimalDigits = ConcatArrays(OctalDigits, new int[]
+        {
+            '8',
+            '9'
+        });
+
+        public static readonly int[] HexDigits = ConcatArrays(DecimalDigits, new int[]
+        {
+            'A', 'a',
+            'B', 'b',
+            'C', 'c',
+            'D', 'd',
+            'E', 'e',
+            'F', 'f'
+        });
+
+        public static readonly int[] Operators =
         {
             '+',
             '-',
@@ -106,7 +89,7 @@ namespace IronBasic.Compilor
             '>'
         };
 
-        public static readonly int[] AsciiLetters = 
+        public static readonly int[] Letters = 
         {
             'A', 'a',
             'B', 'b',
@@ -136,6 +119,31 @@ namespace IronBasic.Compilor
             'Z', 'z'
         };
 
-        public static readonly int[] NameChars = ConcatArrays(AsciiLetters, AsciiDigits, new int[] { '.' });
+        public static readonly int[] NameChars = ConcatArrays(Letters, DecimalDigits, new int[] { '.' });
+
+        public static readonly int[] LineTerminators =
+        {
+            '\0',
+            -1
+        };
+
+        public static readonly int[] RemarkTerminator =
+        {
+            '\r',
+            '\0'
+        };
+
+        public static readonly int[] StatementTerminators = ConcatArrays(LineTerminators, new int[]
+        {
+            ':'
+        });
+
+        public static readonly int[] ExpressionTerminator = ConcatArrays(LineTerminators, new int[]
+        {
+            ')',
+            ']',
+            ',',
+            ';'
+        });
     }
 }

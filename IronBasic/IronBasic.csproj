@@ -39,37 +39,36 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compatibility\ReflectionHelpers.cs" />
+    <Compile Include="Utils\ReflectionHelpers.cs" />
     <Compile Include="Compilor\DetokeniserOutput.cs" />
-    <Compile Include="Compilor\GwNumberConversion.cs" />
-    <Compile Include="Compilor\Constants.cs" />
-    <Compile Include="Compilor\Grammar.cs" />
+    <Compile Include="Utils\NumberCompatibility.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="Grammar.cs" />
     <Compile Include="Compilor\IO\DetokenisedLineWriter.cs" />
     <Compile Include="Compilor\IO\LineWriter.cs" />
-    <Compile Include="Compilor\IO\StreamExtensions.cs" />
+    <Compile Include="Utils\StreamExtensions.cs" />
     <Compile Include="Compilor\IO\TokenisedLineReader.cs" />
     <Compile Include="Compilor\KeywordAttribute.cs" />
     <Compile Include="Compilor\IO\LineReader.cs" />
+    <Compile Include="Runtime\ProtectedProgramEncoder.cs" />
     <Compile Include="Runtime\ReplExceptionCode.cs" />
     <Compile Include="Runtime\ReplRuntimeException.cs" />
     <Compile Include="Runtime\ReplEngine.cs" />
     <Compile Include="Runtime\Program.cs" />
     <Compile Include="Runtime\BytecodeStream.cs" />
     <Compile Include="Runtime\CodePosition.cs" />
-    <Compile Include="Runtime\ProtectedFileDecoder.cs" />
     <Compile Include="Runtime\ReplSessionConfiguration.cs" />
     <Compile Include="Runtime\ReplSession.cs" />
-    <Compile Include="Runtime\Types\MbfFloatBuilder.cs" />
-    <Compile Include="Compilor\Extensions.cs" />
+    <Compile Include="Types\MbfFloatParser.cs" />
+    <Compile Include="Utils\Utilities.cs" />
     <Compile Include="Compilor\Tokeniser.cs" />
     <Compile Include="Compilor\IO\DetokenisedLineReader.cs" />
     <Compile Include="Compilor\Tokens.cs" />
     <Compile Include="Compilor\IO\TokenisedLineWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Runtime\Types\IMbfFloat.cs" />
-    <Compile Include="Runtime\Types\MbfDouble.cs" />
-    <Compile Include="Runtime\Types\MbfSingle.cs" />
-    <Compile Include="Runtime\Types\MbfFloat.cs" />
+    <Compile Include="Types\MbfDouble.cs" />
+    <Compile Include="Types\MbfSingle.cs" />
+    <Compile Include="Types\MbfFloat.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Choose>

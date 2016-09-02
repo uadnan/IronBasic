@@ -3,7 +3,10 @@ using System.Text;
 
 namespace IronBasic.Compilor.IO
 {
-    public class DetokenisedLineWriter : LineWriter
+    /// <summary>
+    /// Writes program line in detokenized form
+    /// </summary>
+    internal class DetokenisedLineWriter : LineWriter
     {
         public DetokenisedLineWriter(Stream stream) : base(stream)
         {

@@ -1,12 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Numerics;
 
-namespace IronBasic.Runtime.Types
+namespace IronBasic.Types
 {
-    public class MbfFloatBuilder : IMbfFloat
+    /// <summary>
+    /// Helper class to parse floating point value
+    /// </summary>
+    internal class MbfFloatParser
     {
-        public MbfFloatBuilder(bool isDouble)
+        public MbfFloatParser(bool isDouble)
         {
             IsDouble = isDouble;
 
@@ -28,7 +30,7 @@ namespace IronBasic.Runtime.Types
             }
         }
 
-        public MbfFloatBuilder(MbfFloat fp)
+        public MbfFloatParser(MbfFloat fp)
             : this(fp is MbfDouble)
         {
             if (fp == null)
@@ -60,36 +62,6 @@ namespace IronBasic.Runtime.Types
         public bool IsDouble { get; }
 
         /// <summary>
-        /// Convert float to byte representation.
-        /// </summary>
-        /// <returns></returns>
-        public byte[] ToBytes()
-        {
-            ApplyCarry();
-
-            // extract bytes
-            var bytes = new List<byte>();
-            var mantisa = Mantissa;
-            for (var i = 1; i < MbfByteSize; i++)
-            {
-                mantisa >>= 8;
-                bytes.Add((byte)(mantisa & 0xff));
-            }
-
-            // append exponent byte
-            bytes.Add(Exponent);
-
-            // Apply sign
-            bytes[bytes.Count - 2] &= 0x7f;
-
-            if (IsNegitive)
-                bytes[bytes.Count - 2] |= 0x80;
-
-            return bytes.ToArray();
-        }
-
-
-        /// <summary>
         /// Apply the carry byte.
         /// </summary>
         private void ApplyCarry()
@@ -109,14 +81,6 @@ namespace IronBasic.Runtime.Types
             Mantissa ^= Mantissa & 0xff;
         }
 
-        /// <summary>
-        /// Discard the carry byte.
-        /// </summary>
-        protected void DiscardCarry()
-        {
-            Mantissa = Mantissa & 0xff;
-        }
-
         private long TruncateInt64()
         {
             var mantisa = Mantissa >> 8;
@@ -130,38 +94,6 @@ namespace IronBasic.Runtime.Types
                 return -val;
 
             return val;
-        }
-
-        private long RoundInt64()
-        {
-            long mantisa;
-            if (Exponent > MbfBias)
-                mantisa = (long)(Mantissa << (Exponent - MbfBias));
-            else
-                mantisa = (long)(Mantissa >> (-Exponent + MbfBias));
-
-            // carry bit set? then round up (affect mantissa only, note we can be bigger
-            // than our byte_size allows)
-
-            if ((mantisa & 0xff) > 0x7f)
-                mantisa += 0x100;
-
-            if (IsNegitive)
-                return -(mantisa >> 8);
-
-            return mantisa >> 8;
-        }
-
-        /// <summary>
-        /// Convert to integer.
-        /// </summary>
-        /// <returns></returns>
-        public long ToInt64(bool round = false)
-        {
-            if (round)
-                return RoundInt64();
-
-            return TruncateInt64();
         }
 
         /// <summary>
@@ -210,11 +142,6 @@ namespace IronBasic.Runtime.Types
             }
         }
 
-        public void Negate()
-        {
-            IsNegitive = !IsNegitive;
-        }
-
         public MbfFloat ToMbfFloat()
         {
             if (IsDouble)
@@ -254,8 +181,6 @@ namespace IronBasic.Runtime.Types
                 Mantissa >>= 1;
             }
 
-            var bI = (BigInteger)Mantissa;
-
             // add mantissas, taking sign into account
             if (IsNegitive == right.IsNegitive)
                 Mantissa += right.Mantissa;
@@ -272,32 +197,6 @@ namespace IronBasic.Runtime.Types
 
             if (normalize)
                 Normalize();
-        }
-
-        public void Subtract(MbfFloat right)
-        {
-            right = (MbfFloat)right.Clone();
-            right.Negate();
-            Add(right);
-        }
-
-        public void Multiply(MbfFloat right)
-        {            
-            if (IsZero)
-                return;
-
-            if (right.IsZero)
-            {
-                IsNegitive = right.IsNegitive;
-                Mantissa = right.Mantissa;
-                Exponent = right.Exponent;
-            }
-
-            Exponent += (byte)(right.Exponent - right.MbfBias - 8);
-            IsNegitive = IsNegitive != right.IsNegitive;
-            Mantissa = Mantissa * right.Mantissa;
-
-            Normalize();
         }
 
         public void Divide(MbfFloat right)
@@ -363,12 +262,20 @@ namespace IronBasic.Runtime.Types
         }
 
 
-        private static bool AbsGreaterThen(IMbfFloat left, IMbfFloat right)
+        private bool AbsGreaterThenMax(MbfFloat maxValue)
         {
-            if (left.Exponent != right.Exponent)
-                return left.Exponent > right.Exponent;
+            if (Exponent != maxValue.Exponent)
+                return Exponent > maxValue.Exponent;
 
-            return left.Mantissa > right.Mantissa;
+            return Mantissa > maxValue.Mantissa;
+        }
+
+        private bool AbsLessThenMin(MbfFloat minValue)
+        {
+            if (Exponent != minValue.Exponent)
+                return Exponent < minValue.Exponent;
+
+            return Mantissa < minValue.Mantissa;
         }
 
         /// <summary>
@@ -380,7 +287,7 @@ namespace IronBasic.Runtime.Types
             var max = IsDouble ? (MbfFloat) MbfDouble.MaxValue : MbfSingle.MaxValue;
 
             exponent10 = 0;
-            while (AbsGreaterThen(this, max))
+            while (AbsGreaterThenMax(max))
             {
                 Divide10();
                 exponent10 += 1;
@@ -388,7 +295,7 @@ namespace IronBasic.Runtime.Types
 
             ApplyCarry();
 
-            while (AbsGreaterThen(min, this))
+            while (AbsLessThenMin(min))
             {
                 Multiply10();
                 exponent10 -= 1;

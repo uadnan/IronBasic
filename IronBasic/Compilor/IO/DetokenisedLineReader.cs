@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using IronBasic.Types;
+using IronBasic.Utils;
 
 namespace IronBasic.Compilor.IO
 {
-    public class DetokenisedLineReader : LineReader
+    /// <summary>
+    /// Reads detokenized program line
+    /// </summary>
+    internal class DetokenisedLineReader : LineReader
     {
         private readonly IDictionary<string, string> _keywordTokenMap;
 
@@ -40,8 +45,8 @@ namespace IronBasic.Compilor.IO
             while (true)
             {
                 var current = BaseStream.ReadByte();
-                if (Constants.AsciiDigits.Contains(current) ||
-                    Constants.AsciiWhitepsace.Contains(current))
+                if (Constants.DecimalDigits.Contains(current) ||
+                    Constants.Whitepsace.Contains(current))
                     stringBuilder.Append((char)current);
                 else
                 {
@@ -53,13 +58,13 @@ namespace IronBasic.Compilor.IO
             }
 
             // don't claim trailing w/s
-            var trimmedWhitespaces = stringBuilder.TrimEnd(Constants.AsciiWhitepsace);
+            var trimmedWhitespaces = stringBuilder.TrimEnd(Constants.Whitepsace);
             if (trimmedWhitespaces > 0)
                 BaseStream.Seek(-1 * trimmedWhitespaces, SeekOrigin.Current);
 
             for (var i = 0; i < stringBuilder.Length; i++)
             {
-                if (!Constants.AsciiWhitepsace.Contains(stringBuilder[i])) continue;
+                if (!Constants.Whitepsace.Contains(stringBuilder[i])) continue;
 
                 stringBuilder.Remove(i, 1);
                 i--;
@@ -90,18 +95,18 @@ namespace IronBasic.Compilor.IO
                 return null;
 
             var builder = new StringBuilder();
-            builder.Append(ReadChar());
+            builder.Append(ReadAsChar());
             ReadUntil(builder, '\r', '\0', '"');
 
             if (Peek() == '"')
-                builder.Append(ReadChar());
+                builder.Append(ReadAsChar());
 
             return builder.ToString();
         }
 
         public string ReadHex()
         {
-            var word = ReadWhile(Constants.AsciiHexNumbers);
+            var word = ReadWhile(Constants.HexDigits);
             var value = word.Length == 0 ? 0 : Convert.ToInt32(word, 16);
             return value.ToBasicUnsignedInteger();
         }
@@ -119,14 +124,14 @@ namespace IronBasic.Compilor.IO
                 if (current == -1)
                     break;
 
-                if (Constants.AsciiWhitepsace.Contains(current))
+                if (Constants.Whitepsace.Contains(current))
                 {
                     // oct literals may be interrupted by whitespace
                     BaseStream.ReadByte();
                     continue;
                 }
 
-                if (!Constants.AsciiOctalNumbers.Contains(current))
+                if (!Constants.OctalDigits.Contains(current))
                     break;
 
                 builder.Append((char)BaseStream.ReadByte());
@@ -200,11 +205,11 @@ namespace IronBasic.Compilor.IO
                     // must be first token or in exponent
                     builder.Append(currentChar);
                 }
-                else if (Constants.AsciiDigits.Contains(currentChar))
+                else if (Constants.DecimalDigits.Contains(currentChar))
                 {
                     builder.Append(currentChar);
                 }
-                else if (Constants.AsciiWhitepsace.Contains(currentChar))
+                else if (Constants.Whitepsace.Contains(currentChar))
                 {
                     // we'll remove this later but need to keep it for now
                     // so we can reposition the stream on removing trailing whitespace
@@ -227,7 +232,7 @@ namespace IronBasic.Compilor.IO
             var word = kill ? "0" : builder.ToString();
 
             // don't claim trailing whitespace
-            while (word.Length > 0 && Constants.AsciiWhitepsace.Contains(word[word.Length - 1]))
+            while (word.Length > 0 && Constants.Whitepsace.Contains(word[word.Length - 1]))
             {
                 word = word.Substring(0, word.Length - 1);
                 BaseStream.Seek(-1, SeekOrigin.Current);
@@ -235,7 +240,7 @@ namespace IronBasic.Compilor.IO
 
             // remove all internal whitespace
             builder.Clear();
-            foreach (var c in word.Where(c => !Constants.AsciiWhitepsace.Contains(c)))
+            foreach (var c in word.Where(c => !Constants.Whitepsace.Contains(c)))
             {
                 builder.Append(c);
             }
@@ -244,7 +249,7 @@ namespace IronBasic.Compilor.IO
             var intValue = word.TryParseInt32();
             builder.Clear();
 
-            if (word.Length == 1 && Constants.AsciiDigits.Contains(word[0]))
+            if (word.Length == 1 && Constants.DecimalDigits.Contains(word[0]))
             {
                 builder.Append((char)(0x11 + intValue));
             }
@@ -266,7 +271,7 @@ namespace IronBasic.Compilor.IO
             }
             else
             {
-                var mbf = word.ToMbf().ToBytes();
+                var mbf = MbfFloat.Parse(word).ToBytes();
                 builder.Append((char)(mbf.Length == 4 ? Token.FloatConstant : Token.DoubleConstant));
                 builder.Append(new string(mbf.Select(f => (char)f).ToArray()));
             }
@@ -301,7 +306,7 @@ namespace IronBasic.Compilor.IO
                     else
                     {
                         // GOTO allows any number of spaces
-                        SkipPeek(Constants.AsciiWhitepsace);
+                        SkipWhitespace();
                         if (Peek(2).ToUpper() == "TO")
                         {
                             builder.Clear();

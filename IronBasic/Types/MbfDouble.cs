@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Numerics;
 
-namespace IronBasic.Runtime.Types
+namespace IronBasic.Types
 {
+    /// <summary>
+    /// Represents Double precision floating poin number in
+    /// Microsoft Binary Format
+    /// </summary>
     public sealed class MbfDouble : MbfFloat
     {
         public const byte DigitCount = 16;

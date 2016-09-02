@@ -2,7 +2,10 @@
 
 namespace IronBasic.Compilor.IO
 {
-    public class TokenisedLineWriter : LineWriter
+    /// <summary>
+    /// Writes program line in tokenized form
+    /// </summary>
+    internal class TokenisedLineWriter : LineWriter
     {
         public TokenisedLineWriter(Stream stream) : base(stream)
         {

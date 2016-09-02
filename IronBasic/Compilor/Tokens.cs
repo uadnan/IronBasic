@@ -487,37 +487,6 @@ namespace IronBasic.Compilor
             Token.KeywordTab
         };
 
-        public static readonly string[] WhitespaceTokens =
-        {
-            " ",
-            "\t",
-            "\n"
-        };
-
-        public static readonly string[] LineTerminatorTokens =
-        {
-            "\0",
-            ""
-        };
-
-        public static readonly string[] StatementTerminatorTokens =
-        {
-            "\0",
-            "",
-            ":"
-        };
-
-        public static readonly string[] ExpressionTerminatorTokens =
-        {
-            "\0",
-            "",
-            ":",
-            ")",
-            "]",
-            ",",
-            ";"
-        };
-
         /// <summary>
         /// Two-byte keyword token lead bytes
         /// </summary>
@@ -547,7 +516,7 @@ namespace IronBasic.Compilor
             { '\0', 4 }
         };
 
-        public static IDictionary<string, string> GetKeywords(Grammar grammar)
+        public static IDictionary<string, string> GetKeywordTokens(Grammar grammar)
         {
             var tokenTypeInfo = typeof(Token);
             var tokenFileds = tokenTypeInfo.GetFields(BindingFlags.Public | BindingFlags.Static);

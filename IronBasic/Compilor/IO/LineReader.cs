@@ -2,17 +2,19 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using IronBasic.Utils;
 
 namespace IronBasic.Compilor.IO
 {
-    public abstract class LineReader : TextReader
+    /// <summary>
+    /// Base class to read program line
+    /// </summary>
+    internal abstract class LineReader : TextReader
     {
-        public Stream BaseStream { get; }
-
-        protected LineReader(string value)
-            : this(value.AsStream())
-        {
-        }
+        /// <summary>
+        /// Gets underlaying base stream
+        /// </summary>
+        protected Stream BaseStream { get; }
 
         protected LineReader(Stream stream)
         {
@@ -50,19 +52,34 @@ namespace IronBasic.Compilor.IO
             return word;
         }
 
-        public char ReadChar()
+        /// <summary>
+        /// Sets the position within the current stream using
+        /// <see cref="SeekOrigin.Current"/> as reference point
+        /// </summary>
+        /// <param name="offset">A byte offset relative to the current stream position</param>
+        /// <returns>The new position within the current stream</returns>
+        public long Seek(long offset)
         {
-            return (char)BaseStream.ReadByte();
+            return BaseStream.Seek(offset, SeekOrigin.Current);
         }
 
-        public int SkipRead(params int[] toSkip)
+        /// <summary>
+        /// Reads a byte as char from the stream and advances the position within the stream by one.
+        /// </summary>
+        /// <returns>The unsigned byte cast to an char</returns>
+        internal char ReadAsChar()
         {
-            return BaseStream.SkipRead(toSkip);
+            return (char)BaseStream.ReadByte();
         }
 
         public int SkipPeek(params int[] toSkip)
         {
             return BaseStream.SkipPeek(toSkip);
+        }
+
+        public int SkipWhitespace()
+        {
+            return BaseStream.SkipWhitespace();
         }
 
         protected void ReadUntil(StringBuilder builder, params int[] toSkip)

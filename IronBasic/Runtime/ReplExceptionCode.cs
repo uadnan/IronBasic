@@ -3,6 +3,9 @@ using System.Reflection;
 
 namespace IronBasic.Runtime
 {
+    /// <summary>
+    /// When applied to Field represents a GW-BASIC version of exception message
+    /// </summary>
     [AttributeUsage(AttributeTargets.Field)]
     internal sealed class ExceptionMessageAttribute : Attribute
     {
@@ -11,11 +14,14 @@ namespace IronBasic.Runtime
             Message = message;
         }
 
+        /// <summary>
+        /// GW-BAISC version of exception message
+        /// </summary>
         public string Message { get; }
     }
 
     /// <summary>
-    /// REPL Exception Codes
+    /// REPL Exception code
     /// </summary>
     public enum ReplExceptionCode
     {
@@ -131,7 +137,7 @@ namespace IronBasic.Runtime
         Deadlock = 77
     }
 
-    public static class ReplExceptionCodeExtensions
+    internal static class ReplExceptionCodeExtensions
     {
         private static readonly Type ReplExceptionCodeType = typeof(ReplExceptionCode);
 
