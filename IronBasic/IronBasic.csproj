@@ -1,107 +1,13 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1B66019E-0071-4467-B28F-3049358F821F}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IronBasic</RootNamespace>
-    <AssemblyName>IronBasic</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFramework>net6.0</TargetFramework>
+
+    <Title>Iron Basic</Title>
+    <Description>.NET based emulator for the GW-BASIC family of interpreters</Description>
+    <Company>Adnan Umer</Company>
+    <Product>Iron Basic</Product>
+    <Copyright>Copyright ©  2016 - Adnan Umer</Copyright>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Utils\ReflectionHelpers.cs" />
-    <Compile Include="Compilor\DetokeniserOutput.cs" />
-    <Compile Include="Utils\NumberCompatibility.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="Grammar.cs" />
-    <Compile Include="Compilor\IO\DetokenisedLineWriter.cs" />
-    <Compile Include="Compilor\IO\LineWriter.cs" />
-    <Compile Include="Utils\StreamExtensions.cs" />
-    <Compile Include="Compilor\IO\TokenisedLineReader.cs" />
-    <Compile Include="Compilor\KeywordAttribute.cs" />
-    <Compile Include="Compilor\IO\LineReader.cs" />
-    <Compile Include="Runtime\ProtectedProgramEncoder.cs" />
-    <Compile Include="Runtime\ReplExceptionCode.cs" />
-    <Compile Include="Runtime\ReplRuntimeException.cs" />
-    <Compile Include="Runtime\ReplEngine.cs" />
-    <Compile Include="Runtime\Program.cs" />
-    <Compile Include="Runtime\BytecodeStream.cs" />
-    <Compile Include="Runtime\CodePosition.cs" />
-    <Compile Include="Runtime\ReplSessionConfiguration.cs" />
-    <Compile Include="Runtime\ReplSession.cs" />
-    <Compile Include="Types\MbfFloatParser.cs" />
-    <Compile Include="Utils\Utilities.cs" />
-    <Compile Include="Compilor\Tokeniser.cs" />
-    <Compile Include="Compilor\IO\DetokenisedLineReader.cs" />
-    <Compile Include="Compilor\Tokens.cs" />
-    <Compile Include="Compilor\IO\TokenisedLineWriter.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Types\MbfDouble.cs" />
-    <Compile Include="Types\MbfSingle.cs" />
-    <Compile Include="Types\MbfFloat.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Choose>
-    <When Condition=" $(TargetFrameworkVersion) == 'v2.0' ">
-      <PropertyGroup>
-        <CustomConstants>$(CustomConstants);NETFX_20</CustomConstants>
-      </PropertyGroup>
-    </When>
-    <When Condition=" $(TargetFrameworkVersion) == 'v3.0' ">
-      <PropertyGroup>
-        <CustomConstants>$(CustomConstants);NETFX_30</CustomConstants>
-        <CustomConstants>$(CustomConstants);NETFX_20</CustomConstants>
-      </PropertyGroup>
-    </When>
-    <When Condition=" $(TargetFrameworkVersion) == 'v3.5' ">
-      <PropertyGroup>
-        <CustomConstants>$(CustomConstants);NETFX_35</CustomConstants>
-        <CustomConstants>$(CustomConstants);NETFX_30</CustomConstants>
-        <CustomConstants>$(CustomConstants);NETFX_20</CustomConstants>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <CustomConstants Condition="$([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.5.1')))) &gt;= 0">$(CustomConstants);NETFX_451</CustomConstants>
-        <CustomConstants Condition="$([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.5')))) &gt;= 0">$(CustomConstants);NETFX_45</CustomConstants>
-        <CustomConstants Condition="$([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('4.0')))) &gt;= 0">$(CustomConstants);NETFX_40</CustomConstants>
-        <CustomConstants Condition="$([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('3.5')))) &gt;= 0">$(CustomConstants);NETFX_35</CustomConstants>
-        <CustomConstants Condition="$([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('3.0')))) &gt;= 0">$(CustomConstants);NETFX_30</CustomConstants>
-        <CustomConstants Condition="$([System.Version]::Parse('$(TargetFrameworkVersion.Substring(1))').CompareTo($([System.Version]::Parse('2.0')))) &gt;= 0">$(CustomConstants);NETFX_20</CustomConstants>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
-  <PropertyGroup>
-    <DefineConstants>$(DefineConstants);$(CustomConstants)</DefineConstants>
-  </PropertyGroup>
+
 </Project>
